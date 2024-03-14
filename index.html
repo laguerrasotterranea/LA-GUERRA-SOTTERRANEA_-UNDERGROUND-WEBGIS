@@ -8,7 +8,10 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
         <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
         <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
         html, body, #map {
             width: 100%;
@@ -32,11 +35,16 @@
         <script src="js/labelgun.min.js"></script>
         <script src="js/labels.js"></script>
         <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
-        <script src="data/AreaMontana_1.js"></script>
-        <script src="data/Confiniprovinciali_2.js"></script>
-        <script src="data/Percorsiciclabili_3.js"></script>
-        <script src="data/Sentierialpini_4.js"></script>
-        <script src="data/Entrategallerie_5.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/confiniprovinciali_1.js"></script>
+        <script src="data/confiniregionali_2.js"></script>
+        <script src="data/7Comuni_3.js"></script>
+        <script src="data/SentieriAlpini__4.js"></script>
+        <script src="data/Percorsiciclabili__5.js"></script>
+        <script src="data/DB_GALLERIE_6.js"></script>
         <script>
         var highlightLayer;
         function highlightFeature(e) {
@@ -56,11 +64,45 @@
         }
         var map = L.map('map', {
             zoomControl:true, maxZoom:28, minZoom:10
-        }).fitBounds([[45.687474184168984,11.060643414765254],[46.05243555986201,12.091400310275686]]);
+        }).fitBounds([[45.69601676817452,10.887768640504266],[46.02637818306759,12.618792584046584]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
         L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
         var bounds_group = new L.featureGroup([]);
         function setBounds() {
         }
@@ -77,7 +119,7 @@
         });
         layer_GoogleSatellite_0;
         map.addLayer(layer_GoogleSatellite_0);
-        function pop_AreaMontana_1(feature, layer) {
+        function pop_confiniprovinciali_1(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     for (i in e.target._eventParents) {
@@ -95,18 +137,42 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <th scope="row">Provincia</th>\
-                        <td>' + (feature.properties['provincia'] !== null ? autolinker.link(feature.properties['provincia'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['COD_RIP'] !== null ? autolinker.link(feature.properties['COD_RIP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_REG'] !== null ? autolinker.link(feature.properties['COD_REG'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_PROV'] !== null ? autolinker.link(feature.properties['COD_PROV'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_CM'] !== null ? autolinker.link(feature.properties['COD_CM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_UTS'] !== null ? autolinker.link(feature.properties['COD_UTS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DEN_PROV'] !== null ? autolinker.link(feature.properties['DEN_PROV'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DEN_CM'] !== null ? autolinker.link(feature.properties['DEN_CM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DEN_UTS'] !== null ? autolinker.link(feature.properties['DEN_UTS'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
         }
 
-        function style_AreaMontana_1_0() {
+        function style_confiniprovinciali_1_0() {
             return {
-                pane: 'pane_AreaMontana_1',
+                pane: 'pane_confiniprovinciali_1',
                 opacity: 1,
-                color: 'rgba(252,223,127,1.0)',
+                color: 'rgba(255,127,0,1.0)',
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
@@ -115,21 +181,20 @@
                 interactive: false,
             }
         }
-        map.createPane('pane_AreaMontana_1');
-        map.getPane('pane_AreaMontana_1').style.zIndex = 401;
-        map.getPane('pane_AreaMontana_1').style['mix-blend-mode'] = 'normal';
-        var layer_AreaMontana_1 = new L.geoJson(json_AreaMontana_1, {
+        map.createPane('pane_confiniprovinciali_1');
+        map.getPane('pane_confiniprovinciali_1').style.zIndex = 401;
+        map.getPane('pane_confiniprovinciali_1').style['mix-blend-mode'] = 'normal';
+        var layer_confiniprovinciali_1 = new L.geoJson(json_confiniprovinciali_1, {
             attribution: '',
             interactive: false,
-            dataVar: 'json_AreaMontana_1',
-            layerName: 'layer_AreaMontana_1',
-            pane: 'pane_AreaMontana_1',
-            onEachFeature: pop_AreaMontana_1,
-            style: style_AreaMontana_1_0,
+            dataVar: 'json_confiniprovinciali_1',
+            layerName: 'layer_confiniprovinciali_1',
+            pane: 'pane_confiniprovinciali_1',
+            onEachFeature: pop_confiniprovinciali_1,
+            style: style_confiniprovinciali_1_0,
         });
-        bounds_group.addLayer(layer_AreaMontana_1);
-        map.addLayer(layer_AreaMontana_1);
-        function pop_Confiniprovinciali_2(feature, layer) {
+        bounds_group.addLayer(layer_confiniprovinciali_1);
+        function pop_confiniregionali_2(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     for (i in e.target._eventParents) {
@@ -147,44 +212,49 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <td colspan="2">' + (feature.properties['provincia'] !== null ? autolinker.link(feature.properties['provincia'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['DEN_REG'] !== null ? autolinker.link(feature.properties['DEN_REG'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <th scope="row">provincia</th>\
-                        <td>' + (feature.properties['nome'] !== null ? autolinker.link(feature.properties['nome'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
         }
 
-        function style_Confiniprovinciali_2_0() {
+        function style_confiniregionali_2_0() {
             return {
-                pane: 'pane_Confiniprovinciali_2',
+                pane: 'pane_confiniregionali_2',
                 opacity: 1,
-                color: 'rgba(255,86,1,1.0)',
+                color: 'rgba(210,25,0,1.0)',
                 dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 4.0,
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
                 fillOpacity: 0,
                 interactive: false,
             }
         }
-        map.createPane('pane_Confiniprovinciali_2');
-        map.getPane('pane_Confiniprovinciali_2').style.zIndex = 402;
-        map.getPane('pane_Confiniprovinciali_2').style['mix-blend-mode'] = 'normal';
-        var layer_Confiniprovinciali_2 = new L.geoJson(json_Confiniprovinciali_2, {
+        map.createPane('pane_confiniregionali_2');
+        map.getPane('pane_confiniregionali_2').style.zIndex = 402;
+        map.getPane('pane_confiniregionali_2').style['mix-blend-mode'] = 'normal';
+        var layer_confiniregionali_2 = new L.geoJson(json_confiniregionali_2, {
             attribution: '',
             interactive: false,
-            dataVar: 'json_Confiniprovinciali_2',
-            layerName: 'layer_Confiniprovinciali_2',
-            pane: 'pane_Confiniprovinciali_2',
-            onEachFeature: pop_Confiniprovinciali_2,
-            style: style_Confiniprovinciali_2_0,
+            dataVar: 'json_confiniregionali_2',
+            layerName: 'layer_confiniregionali_2',
+            pane: 'pane_confiniregionali_2',
+            onEachFeature: pop_confiniregionali_2,
+            style: style_confiniregionali_2_0,
         });
-        bounds_group.addLayer(layer_Confiniprovinciali_2);
-        map.addLayer(layer_Confiniprovinciali_2);
-        function pop_Percorsiciclabili_3(feature, layer) {
+        bounds_group.addLayer(layer_confiniregionali_2);
+        function pop_7Comuni_3(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     for (i in e.target._eventParents) {
@@ -202,47 +272,191 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <th scope="row">nome</th>\
-                        <td>' + (feature.properties['nome'] !== null ? autolinker.link(feature.properties['nome'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['competenza'] !== null ? autolinker.link(feature.properties['competenza'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">tipologia</th>\
-                        <td>' + (feature.properties['tipologia'] !== null ? autolinker.link(feature.properties['tipologia'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">tipo_pista</th>\
-                        <td>' + (feature.properties['tipo_pista'] !== null ? autolinker.link(feature.properties['tipo_pista'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['fondo'] !== null ? autolinker.link(feature.properties['fondo'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['stato'] !== null ? autolinker.link(feature.properties['stato'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['provincia'] !== null ? autolinker.link(feature.properties['provincia'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['descrizion'] !== null ? autolinker.link(feature.properties['descrizion'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['status'] !== null ? autolinker.link(feature.properties['status'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['nome_pista'] !== null ? autolinker.link(feature.properties['nome_pista'].toLocaleString()) : '') + '</td>\
+                        <th scope="row">nomcom</th>\
+                        <td>' + (feature.properties['nomcom'] !== null ? autolinker.link(feature.properties['nomcom'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
         }
 
-        function style_Percorsiciclabili_3_0() {
-            return {
-                pane: 'pane_Percorsiciclabili_3',
+        function style_7Comuni_3_0(feature) {
+            switch(String(feature.properties['nomcom'])) {
+                case 'Asiago':
+                    return {
+                pane: 'pane_7Comuni_3',
                 opacity: 1,
-                color: 'rgba(33,203,255,1.0)',
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,95,95,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Enego':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(31,237,237,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Foza':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(29,80,222,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Gallio':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(162,232,93,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Lusiana Conco':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(157,89,229,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Roana':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,65,194,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'Rotzo':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,184,62,0.3)',
+                interactive: false,
+            }
+                    break;
+                case 'NULL':
+                    return {
+                pane: 'pane_7Comuni_3',
+                opacity: 1,
+                color: 'rgba(255,247,28,0.3)',
+                dashArray: '10.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(85,238,123,0.3)',
+                interactive: false,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_7Comuni_3');
+        map.getPane('pane_7Comuni_3').style.zIndex = 403;
+        map.getPane('pane_7Comuni_3').style['mix-blend-mode'] = 'normal';
+        var layer_7Comuni_3 = new L.geoJson(json_7Comuni_3, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_7Comuni_3',
+            layerName: 'layer_7Comuni_3',
+            pane: 'pane_7Comuni_3',
+            onEachFeature: pop_7Comuni_3,
+            style: style_7Comuni_3_0,
+        });
+        bounds_group.addLayer(layer_7Comuni_3);
+        map.addLayer(layer_7Comuni_3);
+        function pop_SentieriAlpini__4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>segnavia</strong><br />' + (feature.properties['segnavia'] !== null ? autolinker.link(feature.properties['segnavia'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2"><strong>codice</strong><br />' + (feature.properties['codice'] !== null ? autolinker.link(feature.properties['codice'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_SentieriAlpini__4_0() {
+            return {
+                pane: 'pane_SentieriAlpini__4',
+                opacity: 1,
+                color: 'rgba(164,238,15,1.0)',
                 dashArray: '',
                 lineCap: 'square',
                 lineJoin: 'bevel',
@@ -251,20 +465,20 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_Percorsiciclabili_3');
-        map.getPane('pane_Percorsiciclabili_3').style.zIndex = 403;
-        map.getPane('pane_Percorsiciclabili_3').style['mix-blend-mode'] = 'normal';
-        var layer_Percorsiciclabili_3 = new L.geoJson(json_Percorsiciclabili_3, {
+        map.createPane('pane_SentieriAlpini__4');
+        map.getPane('pane_SentieriAlpini__4').style.zIndex = 404;
+        map.getPane('pane_SentieriAlpini__4').style['mix-blend-mode'] = 'normal';
+        var layer_SentieriAlpini__4 = new L.geoJson(json_SentieriAlpini__4, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Percorsiciclabili_3',
-            layerName: 'layer_Percorsiciclabili_3',
-            pane: 'pane_Percorsiciclabili_3',
-            onEachFeature: pop_Percorsiciclabili_3,
-            style: style_Percorsiciclabili_3_0,
+            dataVar: 'json_SentieriAlpini__4',
+            layerName: 'layer_SentieriAlpini__4',
+            pane: 'pane_SentieriAlpini__4',
+            onEachFeature: pop_SentieriAlpini__4,
+            style: style_SentieriAlpini__4_0,
         });
-        bounds_group.addLayer(layer_Percorsiciclabili_3);
-        function pop_Sentierialpini_4(feature, layer) {
+        bounds_group.addLayer(layer_SentieriAlpini__4);
+        function pop_Percorsiciclabili__5(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     for (i in e.target._eventParents) {
@@ -282,49 +496,36 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <th scope="row">segnavia</th>\
-                        <td>' + (feature.properties['segnavia'] !== null ? autolinker.link(feature.properties['segnavia'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome_sovra'] !== null ? autolinker.link(feature.properties['nome_sovra'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <th scope="row">Provincia</th>\
-                        <td>' + (feature.properties['provincia'] !== null ? autolinker.link(feature.properties['provincia'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome_nazio'] !== null ? autolinker.link(feature.properties['nome_nazio'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <th scope="row">Comune</th>\
-                        <td>' + (feature.properties['comune'] !== null ? autolinker.link(feature.properties['comune'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome_regio'] !== null ? autolinker.link(feature.properties['nome_regio'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <td colspan="2">' + (feature.properties['g_montuoso'] !== null ? autolinker.link(feature.properties['g_montuoso'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome_provi'] !== null ? autolinker.link(feature.properties['nome_provi'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <td colspan="2">' + (feature.properties['inizio_sen'] !== null ? autolinker.link(feature.properties['inizio_sen'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome_comun'] !== null ? autolinker.link(feature.properties['nome_comun'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <td colspan="2"><strong>Quota inizio sentiero</strong><br />' + (feature.properties['q_inizio_s'] !== null ? autolinker.link(feature.properties['q_inizio_s'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['fine_sen'] !== null ? autolinker.link(feature.properties['fine_sen'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['q_fine_sen'] !== null ? autolinker.link(feature.properties['q_fine_sen'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">Dislivello</th>\
-                        <td>' + (feature.properties['dislivello'] !== null ? autolinker.link(feature.properties['dislivello'].toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <th scope="row">Difficoltà</th>\
-                        <td>' + (feature.properties['difficolta'] !== null ? autolinker.link(feature.properties['difficolta'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2">' + (feature.properties['nome'] !== null ? autolinker.link(feature.properties['nome'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
         }
 
-        function style_Sentierialpini_4_0() {
+        function style_Percorsiciclabili__5_0() {
             return {
-                pane: 'pane_Sentierialpini_4',
+                pane: 'pane_Percorsiciclabili__5',
                 opacity: 1,
-                color: 'rgba(84,176,74,1.0)',
+                color: 'rgba(58,222,255,1.0)',
                 dashArray: '',
                 lineCap: 'square',
                 lineJoin: 'bevel',
@@ -333,20 +534,20 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_Sentierialpini_4');
-        map.getPane('pane_Sentierialpini_4').style.zIndex = 404;
-        map.getPane('pane_Sentierialpini_4').style['mix-blend-mode'] = 'normal';
-        var layer_Sentierialpini_4 = new L.geoJson(json_Sentierialpini_4, {
+        map.createPane('pane_Percorsiciclabili__5');
+        map.getPane('pane_Percorsiciclabili__5').style.zIndex = 405;
+        map.getPane('pane_Percorsiciclabili__5').style['mix-blend-mode'] = 'normal';
+        var layer_Percorsiciclabili__5 = new L.geoJson(json_Percorsiciclabili__5, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Sentierialpini_4',
-            layerName: 'layer_Sentierialpini_4',
-            pane: 'pane_Sentierialpini_4',
-            onEachFeature: pop_Sentierialpini_4,
-            style: style_Sentierialpini_4_0,
+            dataVar: 'json_Percorsiciclabili__5',
+            layerName: 'layer_Percorsiciclabili__5',
+            pane: 'pane_Percorsiciclabili__5',
+            onEachFeature: pop_Percorsiciclabili__5,
+            style: style_Percorsiciclabili__5_0,
         });
-        bounds_group.addLayer(layer_Sentierialpini_4);
-        function pop_Entrategallerie_5(feature, layer) {
+        bounds_group.addLayer(layer_Percorsiciclabili__5);
+        function pop_DB_GALLERIE_6(feature, layer) {
             layer.on({
                 mouseout: function(e) {
                     for (i in e.target._eventParents) {
@@ -364,27 +565,37 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <th scope="row">Nome galleria</th>\
-                        <td>' + (feature.properties['Nome'] !== null ? autolinker.link(feature.properties['Nome'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2"><strong>Nome</strong><br />' + (feature.properties['Nome'] !== null ? autolinker.link(feature.properties['Nome'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <th scope="row">Comune</th>\
-                        <td>' + (feature.properties['Comune'] !== null ? autolinker.link(feature.properties['Comune'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2"><strong>Regione</strong><br />' + (feature.properties['Regione'] !== null ? autolinker.link(feature.properties['Regione'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <td colspan="2">' + (feature.properties['Località'] !== null ? autolinker.link(feature.properties['Località'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2"><strong>Provincia</strong><br />' + (feature.properties['Provincia'] !== null ? autolinker.link(feature.properties['Provincia'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
-                        <th scope="row">Grado accessibilità galleria</th>\
-                        <td>' + (feature.properties['Accessibil'] !== null ? autolinker.link(feature.properties['Accessibil'].toLocaleString()) : '') + '</td>\
+                        <td colspan="2"><strong>Comune</strong><br />' + (feature.properties['Comune'] !== null ? autolinker.link(feature.properties['Comune'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2"><strong>Localit�</strong><br />' + (feature.properties['Localit�'] !== null ? autolinker.link(feature.properties['Localit�'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2"><strong>Accessibil</strong><br />' + (feature.properties['Accessibil'] !== null ? autolinker.link(feature.properties['Accessibil'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2"><strong>Stato cons</strong><br />' + (feature.properties['Stato cons'] !== null ? autolinker.link(feature.properties['Stato cons'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
         }
 
-        function style_Entrategallerie_5_0() {
+        function style_DB_GALLERIE_6_0() {
             return {
-                pane: 'pane_Entrategallerie_5',
+                pane: 'pane_DB_GALLERIE_6',
                 radius: 4.0,
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -394,42 +605,30 @@
                 weight: 1,
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(133,0,204,1.0)',
+                fillColor: 'rgba(143,72,231,1.0)',
                 interactive: true,
             }
         }
-        map.createPane('pane_Entrategallerie_5');
-        map.getPane('pane_Entrategallerie_5').style.zIndex = 405;
-        map.getPane('pane_Entrategallerie_5').style['mix-blend-mode'] = 'normal';
-        var layer_Entrategallerie_5 = new L.geoJson(json_Entrategallerie_5, {
+        map.createPane('pane_DB_GALLERIE_6');
+        map.getPane('pane_DB_GALLERIE_6').style.zIndex = 406;
+        map.getPane('pane_DB_GALLERIE_6').style['mix-blend-mode'] = 'normal';
+        var layer_DB_GALLERIE_6 = new L.geoJson(json_DB_GALLERIE_6, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Entrategallerie_5',
-            layerName: 'layer_Entrategallerie_5',
-            pane: 'pane_Entrategallerie_5',
-            onEachFeature: pop_Entrategallerie_5,
+            dataVar: 'json_DB_GALLERIE_6',
+            layerName: 'layer_DB_GALLERIE_6',
+            pane: 'pane_DB_GALLERIE_6',
+            onEachFeature: pop_DB_GALLERIE_6,
             pointToLayer: function (feature, latlng) {
                 var context = {
                     feature: feature,
                     variables: {}
                 };
-                return L.circleMarker(latlng, style_Entrategallerie_5_0(feature));
+                return L.circleMarker(latlng, style_DB_GALLERIE_6_0(feature));
             },
         });
-        bounds_group.addLayer(layer_Entrategallerie_5);
-        map.addLayer(layer_Entrategallerie_5);
-        map.on("zoomend", function(e) {
-            if (map.getZoom() <= 19 && map.getZoom() >= 2) {
-                map.addLayer(layer_Percorsiciclabili_3);
-            } else if (map.getZoom() > 19 || map.getZoom() < 2) {
-                map.removeLayer(layer_Percorsiciclabili_3);
-            }
-        });
-            if (map.getZoom() <= 19 && map.getZoom() >= 2) {
-                map.addLayer(layer_Percorsiciclabili_3);
-            } else if (map.getZoom() > 19 || map.getZoom() < 2) {
-                map.removeLayer(layer_Percorsiciclabili_3);
-            }
+        bounds_group.addLayer(layer_DB_GALLERIE_6);
+        map.addLayer(layer_DB_GALLERIE_6);
             var title = new L.Control();
             title.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'info');
@@ -440,27 +639,6 @@
                 this._div.innerHTML = '<h2>UNDERGROUND WEBGIS</h2>';
             };
             title.addTo(map);
-            var abstract = new L.Control({'position':'topright'});
-            abstract.onAdd = function (map) {
-                this._div = L.DomUtil.create('div',
-                'leaflet-control abstract');
-                this._div.id = 'abstract'
-                    this._div.setAttribute("onmouseenter", "abstract.show()");
-                    this._div.setAttribute("onmouseleave", "abstract.hide()");
-                    this.hide();
-                    return this._div;
-                };
-                abstract.hide = function () {
-                    this._div.classList.remove("abstractUncollapsed");
-                    this._div.classList.add("abstract");
-                    this._div.innerHTML = 'i'
-                }
-                abstract.show = function () {
-                    this._div.classList.remove("abstract");
-                    this._div.classList.add("abstractUncollapsed");
-                    this._div.innerHTML = ' <br />Il portale vuole configurarsi come una piattaforma aperta al pubblico, tramite la quale è possibile cercare le entrate alle gallerie militari sino ad ora rinvenute e documentate. Sulla mappa visibile all\'utente, sarà possibile visualizzare gli accessi alle gallerie e il loro grado di accessibilità (scarso= accesso della galleria bloccato; discreto / buono = accesso della galleria parzialmente bloccato; ottimo = accesso della galleria libero).  <br />Ricordiamo nuovamente che questo lavoro presenta le entrate delle strutture. Il grado di accessibilità degli ingressi NON VA RIFERITO in alcun modo alla percorribilità delle gallerie! Invitiamo inoltre gli utenti a NON ADDENTRARSI nelle strutture che, ad un primo momento, potrebbero sembrare percorribili. I rilievi e le documentazioni qui proposte sono state eseguite con l\'ausilio di personale esperto. <br /> <br />SEGNALAZIONI<br />É possibile segnalare la presenza di attestazioni riguardanti la Grande Guerra tramite e-mail e/o direttamente sulla mappa. In entrambi i casi chiediamo l\'invio di documentazione fotografica riguardante la tipologia di attestazione rinvenuta, seguita da una descrizione, in modo tale da renderla più facilmente riconoscibile dal team di ricerca durante le indagini; una volta documentate, verranno inserite all\'interno del Database. <br /> <br />COME UTILIZZARE IL PORTALE<br />Tra le pagine esistenti all\'interno di questo sito, ve ne sono due dedicate ai dati raccolti. Sono di fatti presenti:<br />un portfolio presentante le immagini di alcuni degli accessi sino ad ora catalogati<br />L\'accesso al portale web<br />Per poter accedere al Web-GIS è richiesta all\'utente l\'identificazione User + Password.<br />Una volta effettuato l\'accesso, sarà possibile procedere con la visualizzazione della mappa creata e dei dati in essa contenuti.<br />La mappa presenta:<br />una legenda contenente i layers visibili sulla mappa; ogni layer è a sua volta identificabile da simbologia ed etichetta;<br />un\'area di ricerca;<br />scala di zoom (ingrandimento eseguibile anche con rotella del mouse).<br />La selezione è osservabile tramite una colorazione degli elementi (tendenzialmente, il dato risulta di colore rosso quando selezionato). <br />';
-            };
-            abstract.addTo(map);
         var osmGeocoder = new L.Control.Geocoder({
             collapsed: true,
             position: 'topleft',
@@ -472,30 +650,582 @@
         document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
         .title += 'Search for a place';
         var baseMaps = {};
-        L.control.layers(baseMaps,{'<img src="legend/Entrategallerie_5.png" /> Entrate gallerie': layer_Entrategallerie_5,'<img src="legend/Sentierialpini_4.png" /> Sentieri alpini': layer_Sentierialpini_4,'<img src="legend/Percorsiciclabili_3.png" /> Percorsi ciclabili': layer_Percorsiciclabili_3,'<img src="legend/Confiniprovinciali_2.png" /> Confini provinciali': layer_Confiniprovinciali_2,'<img src="legend/AreaMontana_1.png" /> Area Montana': layer_AreaMontana_1,"Google Satellite": layer_GoogleSatellite_0,}).addTo(map);
+        L.control.layers(baseMaps,{'<img src="legend/DB_GALLERIE_6.png" /> DB_GALLERIE': layer_DB_GALLERIE_6,'<img src="legend/Percorsiciclabili__5.png" /> Percorsi ciclabili_': layer_Percorsiciclabili__5,'<img src="legend/SentieriAlpini__4.png" /> Sentieri Alpini_': layer_SentieriAlpini__4,'7 Comuni<br /><table><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Asiago0.png" /></td><td>Asiago</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Enego1.png" /></td><td>Enego</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Foza2.png" /></td><td>Foza</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Gallio3.png" /></td><td>Gallio</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_LusianaConco4.png" /></td><td>Lusiana Conco</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Roana5.png" /></td><td>Roana</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_Rotzo6.png" /></td><td>Rotzo</td></tr><tr><td style="text-align: center;"><img src="legend/7Comuni_3_7.png" /></td><td></td></tr></table>': layer_7Comuni_3,'<img src="legend/confiniregionali_2.png" /> confini regionali': layer_confiniregionali_2,'<img src="legend/confiniprovinciali_1.png" /> confini provinciali': layer_confiniprovinciali_1,"Google Satellite": layer_GoogleSatellite_0,}).addTo(map);
         setBounds();
         var i = 0;
-        layer_Confiniprovinciali_2.eachLayer(function(layer) {
+        layer_7Comuni_3.eachLayer(function(layer) {
             var context = {
                 feature: layer.feature,
                 variables: {}
             };
-            layer.bindTooltip((layer.feature.properties['nome'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['nome']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Confiniprovinciali_2'});
+            layer.bindTooltip((layer.feature.properties['nomcom'] !== null?String('<div style="color: #fefefe; font-size: 10pt; font-weight: bold; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['nomcom']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_7Comuni_3'});
             labels.push(layer);
             totalMarkers += 1;
               layer.added = true;
               addLabel(layer, i);
               i++;
         });
-        resetLabels([layer_AreaMontana_1,layer_Confiniprovinciali_2,layer_Sentierialpini_4]);
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"Regione": "str","Nome": "str","Localit�": "str","Stato cons": "str","Comune": "str","Accessibil": "str","Provincia": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+        var i = 0;
+        layer_7Comuni_3.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['nomcom'] !== null?String('<div style="color: #fefefe; font-size: 10pt; font-weight: bold; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['nomcom']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_7Comuni_3'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Regione = document.createElement('div');
+            div_Regione.id = "div_Regione";
+            div_Regione.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Regione);
+            sel_Regione = document.createElement('select');
+            sel_Regione.multiple = true;
+            sel_Regione.size = 1;
+            sel_Regione.id = "sel_Regione";
+            var Regione_options_str = "<option value='' unselected></option>";
+            sel_Regione.onchange = function(){filterFunc()};
+            Regione_options_str  += '<option value="Veneto">Veneto</option>';
+            sel_Regione.innerHTML = Regione_options_str;
+            div_Regione.appendChild(sel_Regione);
+            var lab_Regione = document.createElement('div');
+            lab_Regione.innerHTML = 'Regione';
+            lab_Regione.className = 'filterlabel';
+            div_Regione.appendChild(lab_Regione);
+            var reset_Regione = document.createElement('div');
+            reset_Regione.innerHTML = 'clear filter';
+            reset_Regione.className = 'filterlabel';
+            reset_Regione.onclick = function() {
+                var options = document.getElementById("sel_Regione").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Regione.appendChild(reset_Regione);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Nome = document.createElement('div');
+            div_Nome.id = "div_Nome";
+            div_Nome.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Nome);
+            sel_Nome = document.createElement('select');
+            sel_Nome.multiple = true;
+            sel_Nome.size = 10;
+            sel_Nome.id = "sel_Nome";
+            var Nome_options_str = "<option value='' unselected></option>";
+            sel_Nome.onchange = function(){filterFunc()};
+            Nome_options_str  += '<option value="GAL-AS-0066">GAL-AS-0066</option>';
+            Nome_options_str  += '<option value="GAL-AS-0067">GAL-AS-0067</option>';
+            Nome_options_str  += '<option value="GAL-AS-0068">GAL-AS-0068</option>';
+            Nome_options_str  += '<option value="GAL-AS-0069">GAL-AS-0069</option>';
+            Nome_options_str  += '<option value="GAL-AS-0070">GAL-AS-0070</option>';
+            Nome_options_str  += '<option value="GAL-AS-0071">GAL-AS-0071</option>';
+            Nome_options_str  += '<option value="GAL-AS-0072">GAL-AS-0072</option>';
+            Nome_options_str  += '<option value="GAL-AS-0073">GAL-AS-0073</option>';
+            Nome_options_str  += '<option value="GAL-AS-0074">GAL-AS-0074</option>';
+            Nome_options_str  += '<option value="GAL-AS-0093">GAL-AS-0093</option>';
+            Nome_options_str  += '<option value="GAL-AS-0103">GAL-AS-0103</option>';
+            Nome_options_str  += '<option value="GAL-AS-0104">GAL-AS-0104</option>';
+            Nome_options_str  += '<option value="GAL-AS-0109">GAL-AS-0109</option>';
+            Nome_options_str  += '<option value="GAL-AS-0110">GAL-AS-0110</option>';
+            Nome_options_str  += '<option value="GAL-AS-0111">GAL-AS-0111</option>';
+            Nome_options_str  += '<option value="GAL-AS-0112">GAL-AS-0112</option>';
+            Nome_options_str  += '<option value="GAL-AS-0113">GAL-AS-0113</option>';
+            Nome_options_str  += '<option value="GAL-AS-0116">GAL-AS-0116</option>';
+            Nome_options_str  += '<option value="GAL-AS-0117">GAL-AS-0117</option>';
+            Nome_options_str  += '<option value="GAL-AS-0118">GAL-AS-0118</option>';
+            Nome_options_str  += '<option value="GAL-AS-0119">GAL-AS-0119</option>';
+            Nome_options_str  += '<option value="GAL-AS-0122">GAL-AS-0122</option>';
+            Nome_options_str  += '<option value="GAL-AS-0123">GAL-AS-0123</option>';
+            Nome_options_str  += '<option value="GAL-AS-0124">GAL-AS-0124</option>';
+            Nome_options_str  += '<option value="GAL-AS-0127">GAL-AS-0127</option>';
+            Nome_options_str  += '<option value="GAL-AS-0133">GAL-AS-0133</option>';
+            Nome_options_str  += '<option value="GAL-AS-0134">GAL-AS-0134</option>';
+            Nome_options_str  += '<option value="GAL-AS-0135">GAL-AS-0135</option>';
+            Nome_options_str  += '<option value="GAL-AS-0136">GAL-AS-0136</option>';
+            Nome_options_str  += '<option value="GAL-AS-0138">GAL-AS-0138</option>';
+            Nome_options_str  += '<option value="GAL-AS-0139">GAL-AS-0139</option>';
+            Nome_options_str  += '<option value="GAL-AS-0140">GAL-AS-0140</option>';
+            Nome_options_str  += '<option value="GAL-AS-0141">GAL-AS-0141</option>';
+            Nome_options_str  += '<option value="GAL-AS-0142">GAL-AS-0142</option>';
+            Nome_options_str  += '<option value="GAL-AS-0143">GAL-AS-0143</option>';
+            Nome_options_str  += '<option value="GAL-AS-0144">GAL-AS-0144</option>';
+            Nome_options_str  += '<option value="GAL-AS-0145">GAL-AS-0145</option>';
+            Nome_options_str  += '<option value="GAL-AS-0146">GAL-AS-0146</option>';
+            Nome_options_str  += '<option value="GAL-AS-0147">GAL-AS-0147</option>';
+            Nome_options_str  += '<option value="GAL-AS-0148">GAL-AS-0148</option>';
+            Nome_options_str  += '<option value="GAL-AS-0149">GAL-AS-0149</option>';
+            Nome_options_str  += '<option value="GAL-AS-0150">GAL-AS-0150</option>';
+            Nome_options_str  += '<option value="GAL-AS-0151">GAL-AS-0151</option>';
+            Nome_options_str  += '<option value="GAL-AS-0152">GAL-AS-0152</option>';
+            Nome_options_str  += '<option value="GAL-AS-0154">GAL-AS-0154</option>';
+            Nome_options_str  += '<option value="GAL-AS-0155">GAL-AS-0155</option>';
+            Nome_options_str  += '<option value="GAL-AS-0157">GAL-AS-0157</option>';
+            Nome_options_str  += '<option value="GAL-AS-0158">GAL-AS-0158</option>';
+            Nome_options_str  += '<option value="GAL-AS-0159">GAL-AS-0159</option>';
+            Nome_options_str  += '<option value="GAL-AS-0160">GAL-AS-0160</option>';
+            Nome_options_str  += '<option value="GAL-AS-0161">GAL-AS-0161</option>';
+            Nome_options_str  += '<option value="GAL-AS-0162">GAL-AS-0162</option>';
+            Nome_options_str  += '<option value="GAL-AS-0163">GAL-AS-0163</option>';
+            Nome_options_str  += '<option value="GAL-AS-0164">GAL-AS-0164</option>';
+            Nome_options_str  += '<option value="GAL-AS-0165">GAL-AS-0165</option>';
+            Nome_options_str  += '<option value="GAL-AS-0166">GAL-AS-0166</option>';
+            Nome_options_str  += '<option value="GAL-AS-0167">GAL-AS-0167</option>';
+            Nome_options_str  += '<option value="GAL-AS-0168">GAL-AS-0168</option>';
+            Nome_options_str  += '<option value="GAL-AS-0169">GAL-AS-0169</option>';
+            Nome_options_str  += '<option value="GAL-AS-0170">GAL-AS-0170</option>';
+            Nome_options_str  += '<option value="GAL-AS-0172">GAL-AS-0172</option>';
+            Nome_options_str  += '<option value="GAL-AS-0173">GAL-AS-0173</option>';
+            Nome_options_str  += '<option value="GAL-AS-0174">GAL-AS-0174</option>';
+            Nome_options_str  += '<option value="GAL-AS-0178">GAL-AS-0178</option>';
+            Nome_options_str  += '<option value="GAL-AS-0179">GAL-AS-0179</option>';
+            Nome_options_str  += '<option value="GAL-AS-0180">GAL-AS-0180</option>';
+            Nome_options_str  += '<option value="GAL-AS-0181">GAL-AS-0181</option>';
+            Nome_options_str  += '<option value="GAL-AS-0183">GAL-AS-0183</option>';
+            Nome_options_str  += '<option value="GAL-AS-0184">GAL-AS-0184</option>';
+            Nome_options_str  += '<option value="GAL-AS-0185">GAL-AS-0185</option>';
+            Nome_options_str  += '<option value="GAL-AS-0186">GAL-AS-0186</option>';
+            Nome_options_str  += '<option value="GAL-AS-0187">GAL-AS-0187</option>';
+            Nome_options_str  += '<option value="GAL-AS-0188">GAL-AS-0188</option>';
+            Nome_options_str  += '<option value="GAL-AS-0189">GAL-AS-0189</option>';
+            Nome_options_str  += '<option value="GAL-AS-0191">GAL-AS-0191</option>';
+            Nome_options_str  += '<option value="GAL-AS-0192">GAL-AS-0192</option>';
+            Nome_options_str  += '<option value="GAL-AS-0193">GAL-AS-0193</option>';
+            Nome_options_str  += '<option value="GAL-AS-0194">GAL-AS-0194</option>';
+            Nome_options_str  += '<option value="GAL-AS-0195">GAL-AS-0195</option>';
+            Nome_options_str  += '<option value="GAL-AS-0196">GAL-AS-0196</option>';
+            Nome_options_str  += '<option value="GAL-AS-0197">GAL-AS-0197</option>';
+            Nome_options_str  += '<option value="GAL-AS-0198">GAL-AS-0198</option>';
+            Nome_options_str  += '<option value="GAL-AS-0199">GAL-AS-0199</option>';
+            Nome_options_str  += '<option value="GAL-AS-0200">GAL-AS-0200</option>';
+            Nome_options_str  += '<option value="GAL-AS-0201">GAL-AS-0201</option>';
+            Nome_options_str  += '<option value="GAL-AS-0202">GAL-AS-0202</option>';
+            Nome_options_str  += '<option value="GAL-AS-0203">GAL-AS-0203</option>';
+            Nome_options_str  += '<option value="GAL-AS-0204">GAL-AS-0204</option>';
+            Nome_options_str  += '<option value="GAL-AS-0205">GAL-AS-0205</option>';
+            Nome_options_str  += '<option value="GAL-AS-0206">GAL-AS-0206</option>';
+            Nome_options_str  += '<option value="GAL-AS-0207">GAL-AS-0207</option>';
+            Nome_options_str  += '<option value="GAL-AS-0209">GAL-AS-0209</option>';
+            Nome_options_str  += '<option value="GAL-AS-0211">GAL-AS-0211</option>';
+            Nome_options_str  += '<option value="GAL-AS-0212">GAL-AS-0212</option>';
+            Nome_options_str  += '<option value="GAL-AS-0213">GAL-AS-0213</option>';
+            Nome_options_str  += '<option value="GAL-AS-0214">GAL-AS-0214</option>';
+            Nome_options_str  += '<option value="GAL-AS-0215">GAL-AS-0215</option>';
+            Nome_options_str  += '<option value="GAL-AS-0216">GAL-AS-0216</option>';
+            Nome_options_str  += '<option value="GAL-AS-0217">GAL-AS-0217</option>';
+            Nome_options_str  += '<option value="GAL-AS-0218">GAL-AS-0218</option>';
+            Nome_options_str  += '<option value="GAL-AS-0219">GAL-AS-0219</option>';
+            Nome_options_str  += '<option value="GAL-AS-0220">GAL-AS-0220</option>';
+            Nome_options_str  += '<option value="GAL-AS-0221">GAL-AS-0221</option>';
+            Nome_options_str  += '<option value="GAL-AS-0222">GAL-AS-0222</option>';
+            Nome_options_str  += '<option value="GAL-AS-0223">GAL-AS-0223</option>';
+            Nome_options_str  += '<option value="GAL-AS-0226">GAL-AS-0226</option>';
+            Nome_options_str  += '<option value="GAL-AS-0227">GAL-AS-0227</option>';
+            Nome_options_str  += '<option value="GAL-AS-0228">GAL-AS-0228</option>';
+            Nome_options_str  += '<option value="GAL-AS-0229">GAL-AS-0229</option>';
+            Nome_options_str  += '<option value="GAL-AS-0230">GAL-AS-0230</option>';
+            Nome_options_str  += '<option value="GAL-AS-0231">GAL-AS-0231</option>';
+            Nome_options_str  += '<option value="GAL-AS-0232">GAL-AS-0232</option>';
+            Nome_options_str  += '<option value="GAL-AS-0233">GAL-AS-0233</option>';
+            Nome_options_str  += '<option value="GAL-AS-0234">GAL-AS-0234</option>';
+            Nome_options_str  += '<option value="GAL-AS-0235">GAL-AS-0235</option>';
+            Nome_options_str  += '<option value="GAL-AS-0236">GAL-AS-0236</option>';
+            Nome_options_str  += '<option value="GAL-AS-0237">GAL-AS-0237</option>';
+            Nome_options_str  += '<option value="GAL-AS-0239">GAL-AS-0239</option>';
+            Nome_options_str  += '<option value="GAL-AS-0240">GAL-AS-0240</option>';
+            Nome_options_str  += '<option value="GAL-AS-0241">GAL-AS-0241</option>';
+            Nome_options_str  += '<option value="GAL-AS-0242">GAL-AS-0242</option>';
+            Nome_options_str  += '<option value="GAL-AS-0243">GAL-AS-0243</option>';
+            Nome_options_str  += '<option value="GAL-AS-0245">GAL-AS-0245</option>';
+            Nome_options_str  += '<option value="GAL-AS-0246">GAL-AS-0246</option>';
+            Nome_options_str  += '<option value="GAL-AS-0247">GAL-AS-0247</option>';
+            Nome_options_str  += '<option value="GAL-AS-0248">GAL-AS-0248</option>';
+            Nome_options_str  += '<option value="GAL-AS-0249">GAL-AS-0249</option>';
+            Nome_options_str  += '<option value="GAL-AS-0250">GAL-AS-0250</option>';
+            Nome_options_str  += '<option value="GAL-AS-0251">GAL-AS-0251</option>';
+            Nome_options_str  += '<option value="GAL-AS-0257">GAL-AS-0257</option>';
+            Nome_options_str  += '<option value="GAL-AS-0260">GAL-AS-0260</option>';
+            Nome_options_str  += '<option value="GAL-AS-0261">GAL-AS-0261</option>';
+            Nome_options_str  += '<option value="GAL-AS-0264">GAL-AS-0264</option>';
+            Nome_options_str  += '<option value="GAL-AS-0267">GAL-AS-0267</option>';
+            Nome_options_str  += '<option value="GAL-AS-0269">GAL-AS-0269</option>';
+            Nome_options_str  += '<option value="GAL-AS-0270">GAL-AS-0270</option>';
+            Nome_options_str  += '<option value="GAL-AS-0271">GAL-AS-0271</option>';
+            Nome_options_str  += '<option value="GAL-AS-0277">GAL-AS-0277</option>';
+            Nome_options_str  += '<option value="GAL-LC-0001">GAL-LC-0001</option>';
+            Nome_options_str  += '<option value="GAL-LC-0002">GAL-LC-0002</option>';
+            Nome_options_str  += '<option value="GAL-LC-0003">GAL-LC-0003</option>';
+            Nome_options_str  += '<option value="GAL-LC-0004">GAL-LC-0004</option>';
+            Nome_options_str  += '<option value="GAL-LC-0005">GAL-LC-0005</option>';
+            Nome_options_str  += '<option value="GAL-LC-0006">GAL-LC-0006</option>';
+            Nome_options_str  += '<option value="GAL-LC-0007">GAL-LC-0007</option>';
+            Nome_options_str  += '<option value="GAL-LC-0008">GAL-LC-0008</option>';
+            Nome_options_str  += '<option value="GAL-LC-0009">GAL-LC-0009</option>';
+            Nome_options_str  += '<option value="GAL-LC-0010">GAL-LC-0010</option>';
+            Nome_options_str  += '<option value="GAL-LC-0011">GAL-LC-0011</option>';
+            Nome_options_str  += '<option value="GAL-LC-0012">GAL-LC-0012</option>';
+            Nome_options_str  += '<option value="GAL-LC-0013">GAL-LC-0013</option>';
+            Nome_options_str  += '<option value="GAL-LC-0014">GAL-LC-0014</option>';
+            Nome_options_str  += '<option value="GAL-LC-0015">GAL-LC-0015</option>';
+            Nome_options_str  += '<option value="GAL-LC-0016">GAL-LC-0016</option>';
+            Nome_options_str  += '<option value="GAL-LC-0017">GAL-LC-0017</option>';
+            Nome_options_str  += '<option value="GAL-LC-0018">GAL-LC-0018</option>';
+            Nome_options_str  += '<option value="GAL-LC-0019">GAL-LC-0019</option>';
+            Nome_options_str  += '<option value="GAL-LC-0020">GAL-LC-0020</option>';
+            Nome_options_str  += '<option value="GAL-LC-0021">GAL-LC-0021</option>';
+            Nome_options_str  += '<option value="GAL-LC-0022">GAL-LC-0022</option>';
+            Nome_options_str  += '<option value="GAL-LC-0023">GAL-LC-0023</option>';
+            Nome_options_str  += '<option value="GAL-LC-0025">GAL-LC-0025</option>';
+            Nome_options_str  += '<option value="GAL-LC-0026">GAL-LC-0026</option>';
+            Nome_options_str  += '<option value="GAL-LC-0027">GAL-LC-0027</option>';
+            Nome_options_str  += '<option value="GAL-LC-0028">GAL-LC-0028</option>';
+            Nome_options_str  += '<option value="GAL-LC-0075">GAL-LC-0075</option>';
+            Nome_options_str  += '<option value="GAL-LC-0076">GAL-LC-0076</option>';
+            Nome_options_str  += '<option value="GAL-LC-0077">GAL-LC-0077</option>';
+            Nome_options_str  += '<option value="GAL-LC-0078">GAL-LC-0078</option>';
+            Nome_options_str  += '<option value="GAL-LC-0079">GAL-LC-0079</option>';
+            Nome_options_str  += '<option value="GAL-LC-0080">GAL-LC-0080</option>';
+            Nome_options_str  += '<option value="GAL-LC-0081">GAL-LC-0081</option>';
+            Nome_options_str  += '<option value="GAL-LC-0082">GAL-LC-0082</option>';
+            Nome_options_str  += '<option value="GAL-LC-0084">GAL-LC-0084</option>';
+            Nome_options_str  += '<option value="GAL-LC-0085">GAL-LC-0085</option>';
+            Nome_options_str  += '<option value="GAL-LC-0095">GAL-LC-0095</option>';
+            Nome_options_str  += '<option value="GAL-LC-0096">GAL-LC-0096</option>';
+            Nome_options_str  += '<option value="GAL-LC-0097">GAL-LC-0097</option>';
+            Nome_options_str  += '<option value="GAL-LC-0098">GAL-LC-0098</option>';
+            Nome_options_str  += '<option value="GAL-LV-0047">GAL-LV-0047</option>';
+            Nome_options_str  += '<option value="GAL-LV-0048">GAL-LV-0048</option>';
+            Nome_options_str  += '<option value="GAL-LV-0049">GAL-LV-0049</option>';
+            Nome_options_str  += '<option value="GAL-LV-0050">GAL-LV-0050</option>';
+            Nome_options_str  += '<option value="GAL-LV-0051">GAL-LV-0051</option>';
+            Nome_options_str  += '<option value="GAL-LV-0052">GAL-LV-0052</option>';
+            Nome_options_str  += '<option value="GAL-LV-0053">GAL-LV-0053</option>';
+            Nome_options_str  += '<option value="GAL-LV-0054">GAL-LV-0054</option>';
+            Nome_options_str  += '<option value="GAL-LV-0055">GAL-LV-0055</option>';
+            Nome_options_str  += '<option value="GAL-LV-0056">GAL-LV-0056</option>';
+            Nome_options_str  += '<option value="GAL-LV-0057">GAL-LV-0057</option>';
+            Nome_options_str  += '<option value="GAL-LV-0058">GAL-LV-0058</option>';
+            Nome_options_str  += '<option value="GAL-LV-0059">GAL-LV-0059</option>';
+            Nome_options_str  += '<option value="GAL-LV-0060">GAL-LV-0060</option>';
+            Nome_options_str  += '<option value="GAL-LV-0061">GAL-LV-0061</option>';
+            Nome_options_str  += '<option value="GAL-LV-0062">GAL-LV-0062</option>';
+            Nome_options_str  += '<option value="GAL-LV-0063">GAL-LV-0063</option>';
+            Nome_options_str  += '<option value="GAL-LV-0064">GAL-LV-0064</option>';
+            Nome_options_str  += '<option value="GAL-LV-0065">GAL-LV-0065</option>';
+            sel_Nome.innerHTML = Nome_options_str;
+            div_Nome.appendChild(sel_Nome);
+            var lab_Nome = document.createElement('div');
+            lab_Nome.innerHTML = 'Nome';
+            lab_Nome.className = 'filterlabel';
+            div_Nome.appendChild(lab_Nome);
+            var reset_Nome = document.createElement('div');
+            reset_Nome.innerHTML = 'clear filter';
+            reset_Nome.className = 'filterlabel';
+            reset_Nome.onclick = function() {
+                var options = document.getElementById("sel_Nome").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Nome.appendChild(reset_Nome);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Localit = document.createElement('div');
+            div_Localit.id = "div_Localit";
+            div_Localit.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Localit);
+            sel_Localit = document.createElement('select');
+            sel_Localit.multiple = true;
+            sel_Localit.size = 10;
+            sel_Localit.id = "sel_Localit";
+            var Localit_options_str = "<option value='' unselected></option>";
+            sel_Localit.onchange = function(){filterFunc()};
+            Localit_options_str  += '<option value="Cima del Porco">Cima del Porco</option>';
+            Localit_options_str  += '<option value="Ex Malga Granezzetta">Ex Malga Granezzetta</option>';
+            Localit_options_str  += '<option value="Monte Corgnon">Monte Corgnon</option>';
+            Localit_options_str  += '<option value="Monte Corno">Monte Corno</option>';
+            Localit_options_str  += '<option value="Monte Mazze">Monte Mazze</option>';
+            Localit_options_str  += '<option value="Monte Porchecche">Monte Porchecche</option>';
+            Localit_options_str  += '<option value="Monte PorcheccheMonte Porchecche">Monte PorcheccheMonte Porchecche</option>';
+            Localit_options_str  += '<option value="Monte Raitertal">Monte Raitertal</option>';
+            Localit_options_str  += '<option value="Monte Zebio">Monte Zebio</option>';
+            Localit_options_str  += '<option value="Roccolo di Monte Catz">Roccolo di Monte Catz</option>';
+            Localit_options_str  += '<option value="Sichestal">Sichestal</option>';
+            Localit_options_str  += '<option value="Snealoch">Snealoch</option>';
+            Localit_options_str  += '<option value="Valle Granezza">Valle Granezza</option>';
+            sel_Localit.innerHTML = Localit_options_str;
+            div_Localit.appendChild(sel_Localit);
+            var lab_Localit = document.createElement('div');
+            lab_Localit.innerHTML = 'Localit�';
+            lab_Localit.className = 'filterlabel';
+            div_Localit.appendChild(lab_Localit);
+            var reset_Localit = document.createElement('div');
+            reset_Localit.innerHTML = 'clear filter';
+            reset_Localit.className = 'filterlabel';
+            reset_Localit.onclick = function() {
+                var options = document.getElementById("sel_Localit").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Localit.appendChild(reset_Localit);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Statocons = document.createElement('div');
+            div_Statocons.id = "div_Statocons";
+            div_Statocons.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Statocons);
+            sel_Statocons = document.createElement('select');
+            sel_Statocons.multiple = true;
+            sel_Statocons.size = 6;
+            sel_Statocons.id = "sel_Statocons";
+            var Statocons_options_str = "<option value='' unselected></option>";
+            sel_Statocons.onchange = function(){filterFunc()};
+            Statocons_options_str  += '<option value="NULL">NULL</option>';
+            Statocons_options_str  += '<option value="Buono">Buono</option>';
+            Statocons_options_str  += '<option value="Discreto">Discreto</option>';
+            Statocons_options_str  += '<option value="Obliterata">Obliterata</option>';
+            Statocons_options_str  += '<option value="Ottimo">Ottimo</option>';
+            Statocons_options_str  += '<option value="Scarso">Scarso</option>';
+            sel_Statocons.innerHTML = Statocons_options_str;
+            div_Statocons.appendChild(sel_Statocons);
+            var lab_Statocons = document.createElement('div');
+            lab_Statocons.innerHTML = 'Stato cons';
+            lab_Statocons.className = 'filterlabel';
+            div_Statocons.appendChild(lab_Statocons);
+            var reset_Statocons = document.createElement('div');
+            reset_Statocons.innerHTML = 'clear filter';
+            reset_Statocons.className = 'filterlabel';
+            reset_Statocons.onclick = function() {
+                var options = document.getElementById("sel_Statocons").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Statocons.appendChild(reset_Statocons);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Comune = document.createElement('div');
+            div_Comune.id = "div_Comune";
+            div_Comune.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Comune);
+            sel_Comune = document.createElement('select');
+            sel_Comune.multiple = true;
+            sel_Comune.size = 3;
+            sel_Comune.id = "sel_Comune";
+            var Comune_options_str = "<option value='' unselected></option>";
+            sel_Comune.onchange = function(){filterFunc()};
+            Comune_options_str  += '<option value="Asiago">Asiago</option>';
+            Comune_options_str  += '<option value="Lugo di Vicenza">Lugo di Vicenza</option>';
+            Comune_options_str  += '<option value="Lusiana-Conco">Lusiana-Conco</option>';
+            sel_Comune.innerHTML = Comune_options_str;
+            div_Comune.appendChild(sel_Comune);
+            var lab_Comune = document.createElement('div');
+            lab_Comune.innerHTML = 'Comune';
+            lab_Comune.className = 'filterlabel';
+            div_Comune.appendChild(lab_Comune);
+            var reset_Comune = document.createElement('div');
+            reset_Comune.innerHTML = 'clear filter';
+            reset_Comune.className = 'filterlabel';
+            reset_Comune.onclick = function() {
+                var options = document.getElementById("sel_Comune").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Comune.appendChild(reset_Comune);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Accessibil = document.createElement('div');
+            div_Accessibil.id = "div_Accessibil";
+            div_Accessibil.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Accessibil);
+            sel_Accessibil = document.createElement('select');
+            sel_Accessibil.multiple = true;
+            sel_Accessibil.size = 5;
+            sel_Accessibil.id = "sel_Accessibil";
+            var Accessibil_options_str = "<option value='' unselected></option>";
+            sel_Accessibil.onchange = function(){filterFunc()};
+            Accessibil_options_str  += '<option value="1">1</option>';
+            Accessibil_options_str  += '<option value="2">2</option>';
+            Accessibil_options_str  += '<option value="3">3</option>';
+            Accessibil_options_str  += '<option value="4">4</option>';
+            Accessibil_options_str  += '<option value="5">5</option>';
+            sel_Accessibil.innerHTML = Accessibil_options_str;
+            div_Accessibil.appendChild(sel_Accessibil);
+            var lab_Accessibil = document.createElement('div');
+            lab_Accessibil.innerHTML = 'Accessibil';
+            lab_Accessibil.className = 'filterlabel';
+            div_Accessibil.appendChild(lab_Accessibil);
+            var reset_Accessibil = document.createElement('div');
+            reset_Accessibil.innerHTML = 'clear filter';
+            reset_Accessibil.className = 'filterlabel';
+            reset_Accessibil.onclick = function() {
+                var options = document.getElementById("sel_Accessibil").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Accessibil.appendChild(reset_Accessibil);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Provincia = document.createElement('div');
+            div_Provincia.id = "div_Provincia";
+            div_Provincia.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Provincia);
+            sel_Provincia = document.createElement('select');
+            sel_Provincia.multiple = true;
+            sel_Provincia.size = 1;
+            sel_Provincia.id = "sel_Provincia";
+            var Provincia_options_str = "<option value='' unselected></option>";
+            sel_Provincia.onchange = function(){filterFunc()};
+            Provincia_options_str  += '<option value="Vicenza">Vicenza</option>';
+            sel_Provincia.innerHTML = Provincia_options_str;
+            div_Provincia.appendChild(sel_Provincia);
+            var lab_Provincia = document.createElement('div');
+            lab_Provincia.innerHTML = 'Provincia';
+            lab_Provincia.className = 'filterlabel';
+            div_Provincia.appendChild(lab_Provincia);
+            var reset_Provincia = document.createElement('div');
+            reset_Provincia.innerHTML = 'clear filter';
+            reset_Provincia.className = 'filterlabel';
+            reset_Provincia.onclick = function() {
+                var options = document.getElementById("sel_Provincia").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Provincia.appendChild(reset_Provincia);
+        resetLabels([layer_7Comuni_3]);
         map.on("zoomend", function(){
-            resetLabels([layer_AreaMontana_1,layer_Confiniprovinciali_2,layer_Sentierialpini_4]);
+            resetLabels([layer_7Comuni_3]);
         });
         map.on("layeradd", function(){
-            resetLabels([layer_AreaMontana_1,layer_Confiniprovinciali_2,layer_Sentierialpini_4]);
+            resetLabels([layer_7Comuni_3]);
         });
         map.on("layerremove", function(){
-            resetLabels([layer_AreaMontana_1,layer_Confiniprovinciali_2,layer_Sentierialpini_4]);
+            resetLabels([layer_7Comuni_3]);
         });
         </script>
     </body>
